@@ -1,0 +1,75 @@
+/* ==========================================================================
+   CHECKEASE — Base styles: reset, typography, scrollbar, utility classes
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-1);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5 { margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: var(--brand-700); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+table { border-collapse: collapse; width: 100%; }
+svg { display: block; }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+
+/* Scrollbar mảnh, hiện đại */
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* --- Utilities --- */
+.u-flex { display: flex; }
+.u-items-center { align-items: center; }
+.u-justify-between { justify-content: space-between; }
+.u-gap-2 { gap: var(--sp-2); }
+.u-gap-3 { gap: var(--sp-3); }
+.u-gap-4 { gap: var(--sp-4); }
+.u-mt-2 { margin-top: var(--sp-2); }
+.u-mt-4 { margin-top: var(--sp-4); }
+.u-mb-2 { margin-bottom: var(--sp-2); }
+.u-mb-4 { margin-bottom: var(--sp-4); }
+.u-muted { color: var(--text-3); }
+.u-strong { color: var(--text-2); font-weight: 600; }
+.u-mono { font-family: var(--font-mono); }
+.u-hide { display: none !important; }
+.u-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.u-scroll-y { overflow-y: auto; }
+
+.u-fade-in { animation: ceFadeIn .28s ease both; }
+@keyframes ceFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.u-spin { animation: ceSpin .9s linear infinite; }
+@keyframes ceSpin { to { transform: rotate(360deg); } }
+
+.u-skeleton {
+  background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 37%, #eef2f7 63%);
+  background-size: 400% 100%;
+  animation: ceSkeleton 1.2s ease infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes ceSkeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+@media print {
+  .ce-sidebar, .ce-topbar, .no-print { display: none !important; }
+  body { background: #fff; }
+}

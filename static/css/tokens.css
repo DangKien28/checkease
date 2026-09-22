@@ -1,0 +1,79 @@
+/* ==========================================================================
+   CHECKEASE — Design Tokens (thiết kế dùng chung cho toàn hệ thống)
+   Toàn bộ màu / khoảng cách / bo góc / bóng đổ định nghĩa tại đây.
+   ========================================================================== */
+
+:root {
+  /* --- Màu thương hiệu --- */
+  --brand-50:  #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+
+  --ink-900: #0b1220;   /* nền sidebar */
+  --ink-800: #111a2c;
+  --ink-700: #1b2740;
+
+  /* --- Màu chữ --- */
+  --text-1: #0f172a;    /* tiêu đề */
+  --text-2: #475569;    /* nội dung */
+  --text-3: #94a3b8;    /* phụ, placeholder */
+  --text-inverse: #f8fafc;
+
+  /* --- Màu nền / viền --- */
+  --bg-page: #f4f6fa;
+  --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-hover: #f1f5f9;
+  --border-1: #e2e8f0;
+  --border-2: #cbd5e1;
+
+  /* --- Màu phán quyết (verdict) --- */
+  --verdict-pass-bg: #dcfce7;   --verdict-pass-fg: #15803d;   --verdict-pass-solid: #16a34a;
+  --verdict-warn-bg: #fef3c7;   --verdict-warn-fg: #b45309;   --verdict-warn-solid: #d97706;
+  --verdict-fail-bg: #fee2e2;   --verdict-fail-fg: #b91c1c;   --verdict-fail-solid: #dc2626;
+  --verdict-ins-bg:  #e2e8f0;   --verdict-ins-fg:  #475569;   --verdict-ins-solid:  #64748b;
+  --verdict-run-bg:  #cffafe;   --verdict-run-fg:  #0e7490;   --verdict-run-solid:  #0891b2;
+
+  /* --- Severity --- */
+  --sev-critical: #dc2626;
+  --sev-major:    #ea580c;
+  --sev-minor:    #ca8a04;
+  --sev-trivial:  #64748b;
+
+  /* --- Biểu đồ --- */
+  --chart-line: #047857;
+  --chart-fill: rgba(5, 150, 105, .10);
+  --chart-grid: #e2e8f0;
+  --chart-threshold: #dc2626;
+
+  /* --- Typography --- */
+  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+
+  /* --- Kích thước --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .08);
+  --shadow-2: 0 4px 12px rgba(15, 23, 42, .08), 0 2px 4px rgba(15, 23, 42, .05);
+  --shadow-3: 0 16px 40px rgba(15, 23, 42, .16);
+
+  --sidebar-w: 248px;
+
+  /* --- Spacing scale --- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+  --z-modal: 100;
+  --z-toast: 120;
+  --z-dropdown: 90;
+}

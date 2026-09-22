@@ -1,0 +1,29 @@
+{% extends "layouts/auth_base.html" %}
+{% block title %}Đăng nhập - Checkease{% endblock %}
+{% block content %}
+<div class="ce-card">
+  <div class="ce-card__body">
+    <h2 style="font-size:21px">Đăng nhập</h2>
+    <p class="u-muted" style="margin:6px 0 22px;font-size:13.5px">Truy cập cổng kiểm soát mức độ sẵn sàng phát hành của bạn.</p>
+    <form action="/login/" method="POST" hx-post="/login/" hx-target="body">
+      {% csrf_token %}
+      <div class="ce-field">
+        <label class="ce-label">Email</label>
+        <input type="email" name="email" class="ce-input" placeholder="ban@congty.vn" required />
+      </div>
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">Mật khẩu</label>
+        <input type="password" name="password" class="ce-input" placeholder="••••••••" required />
+      </div>
+      <div class="u-flex u-justify-between u-items-center" style="margin:10px 0 18px">
+        <label class="ce-toggle"><input type="checkbox" checked /><span class="track"></span><span class="lbl" style="font-size:13px">Ghi nhớ tôi</span></label>
+        <a href="#" style="font-size:13px;font-weight:600">Quên mật khẩu?</a>
+      </div>
+      <button type="submit" class="ce-btn ce-btn--primary ce-btn--lg ce-btn--block">Đăng nhập</button>
+    </form>
+    <div class="u-mt-4" style="text-align:center;font-size:13.5px;color:var(--text-3)">
+      Chưa có tài khoản? <a href="/register/" style="font-weight:700">Đăng ký ngay</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

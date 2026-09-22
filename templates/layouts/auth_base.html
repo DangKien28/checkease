@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Checkease{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+  <script src="https://unpkg.com/htmx.org@1.9.10" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <div class="ce-auth">
+    <div class="ce-auth__brand">
+      <div>
+        <div class="logo-row">
+          <span class="logo-badge" style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand-400),var(--brand-700));display:flex;align-items:center;justify-content:center">
+            <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+          </span> 
+          Checkease
+        </div>
+        <h1 style="margin-top:56px">Cổng kiểm soát mức độ<br/>sẵn sàng phát hành</h1>
+        <p class="lead">Thu bằng chứng từ mã nguồn và tài liệu kiểm thử, chấm điểm theo trọng số, ra phán quyết PASS / WARNING / FAIL có lý do truy vết được.</p>
+        <div class="u-mt-4">
+          <div class="ce-auth__feature">
+            <span class="ico">
+              <svg class="ce-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 13 2 2-2 2"/></svg>
+            </span>
+            <div><b>Hai nhánh bằng chứng</b><span>Quét tĩnh Source Code (Semgrep + secret scan) và phân tích tài liệu Test.</span></div>
+          </div>
+          <div class="ce-auth__feature">
+            <span class="ico">
+              <svg class="ce-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+            </span>
+            <div><b>Gate Engine 3 lớp</b><span>Hard Gate &rarr; Floor rule &rarr; Weighted Score theo Application Tier.</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="color:#526079;font-size:12px">Nhóm 8 — Lớp CS466 AIS &middot; Đồ án MVP</div>
+    </div>
+    <div class="ce-auth__form-wrap">
+      <div class="ce-auth__card" id="auth-content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

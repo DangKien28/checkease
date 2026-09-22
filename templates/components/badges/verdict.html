@@ -1,0 +1,28 @@
+{% load static %}
+{% if verdict == 'PASS' %}
+  <span class="ce-badge ce-badge--pass {% if lg %}ce-badge--verdict-lg{% endif %}">
+    <span class="dot"></span>
+    {% if not lg and icon %}{% include 'components/icons/check.html' with size=14 %}{% endif %}
+    {% if lg %}PASS{% else %}Đạt{% endif %}
+  </span>
+{% elif verdict == 'WARNING' %}
+  <span class="ce-badge ce-badge--warning {% if lg %}ce-badge--verdict-lg{% endif %}">
+    <span class="dot"></span>
+    {% if lg %}WARNING{% else %}Cảnh báo{% endif %}
+  </span>
+{% elif verdict == 'FAIL' %}
+  <span class="ce-badge ce-badge--fail {% if lg %}ce-badge--verdict-lg{% endif %}">
+    <span class="dot"></span>
+    {% if lg %}FAIL{% else %}Không đạt{% endif %}
+  </span>
+{% elif verdict == 'RUNNING' or verdict == 'PENDING' %}
+  <span class="ce-badge ce-badge--running {% if lg %}ce-badge--verdict-lg{% endif %}">
+    <span class="dot"></span>
+    {% if lg %}ĐANG CHẠY{% else %}Đang chạy{% endif %}
+  </span>
+{% else %}
+  <span class="ce-badge ce-badge--insufficient {% if lg %}ce-badge--verdict-lg{% endif %}">
+    <span class="dot"></span>
+    {% if lg %}THIẾU BẰNG CHỨNG{% else %}Thiếu bằng chứng{% endif %}
+  </span>
+{% endif %}

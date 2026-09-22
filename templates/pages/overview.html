@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tổng quan - Checkease{% endblock %}
+{% block breadcrumbs %}<span class="current">Tổng quan</span>{% endblock %}
+
+{% block content %}
+<div class="ce-pagehead">
+  <div>
+    <div class="ce-pagehead__title">Tổng quan</div>
+    <div class="ce-pagehead__desc">Bức tranh toàn cảnh về mức độ sẵn sàng phát hành — một nơi duy nhất để biết phần mềm đã sẵn sàng hay chưa.</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px">
+  {% include "components/stat_card.html" with label="Tổng dự án" value=total_projects meta=total_projects_meta icon="projects" %}
+  {% include "components/stat_card.html" with label="Đang phân tích" value=running_count icon="activity" icon_bg="background:#cffafe;color:#0e7490" meta="Celery workers đang xử lý" %}
+  {% include "components/stat_card.html" with label="Lượt PASS" value=pass_count icon="check" icon_bg="background:var(--verdict-pass-bg);color:var(--verdict-pass-fg)" meta=pass_meta %}
+  {% include "components/stat_card.html" with label="Điểm trung bình" value=avg_score icon="gauge" icon_bg="background:#fef3c7;color:#b45309" meta="thang điểm 0 – 100" %}
+</div>
+
+<section class="ce-card">
+  <header class="ce-card__header">
+    <div>
+      <div class="ce-card__title">
+        <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+        Xu hướng điểm phát hành
+      </div>
+      <div class="ce-card__subtitle">FinalScore theo từng lần phân tích — đường đứt màu đỏ là ngưỡng PASS của tier</div>
+    </div>
+    <div class="u-flex u-items-center u-gap-2">
+      <select class="ce-select" data-filter style="width:210px">
+        <option value="all">Tất cả dự án</option>
+        {% for project in projects %}
+          <option value="{{ project.id }}">{{ project.name }}</option>
+        {% endfor %}
+      </select>
+      <a href="/projects/new/" class="ce-btn ce-btn--primary" hx-get="/projects/new/" hx-target="#main-content" hx-push-url="true">
+        <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <span>Tạo project mới</span>
+      </a>
+    </div>
+  </header>
+  <div class="ce-card__body">
+    <div class="u-flex u-justify-between u-items-center u-mb-2" style="flex-wrap:wrap;gap:10px">
+      <div class="ce-legend">
+        <span class="item"><span class="sw" style="background:var(--chart-line)"></span>Final Score</span>
+        <span class="item"><span class="sw dashed"></span>Ngưỡng PASS của Tier</span>
+      </div>
+      <span class="ce-chip" data-th-chip>Ngưỡng áp dụng: <b>Tier 2</b> &middot; PASS &ge; 80 &middot; WARNING &ge; 60</span>
+    </div>
+    <div id="overview-chart" style="height: 272px;">
+      <!-- Chart.js canvas will be injected here via app.js -->
+    </div>
+  </div>
+</section>
+
+<section class="ce-card" style="margin-top:18px">
+  <header class="ce-card__header">
+    <div>
+      <div class="ce-card__title">
+        <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Dự án gần đây
+      </div>
+      <div class="ce-card__subtitle">Sắp xếp theo thời gian phân tích gần nhất</div>
+    </div>
+    <a href="/projects/" class="ce-btn ce-btn--ghost ce-btn--sm" hx-get="/projects/" hx-target="#main-content" hx-push-url="true">
+      Xem tất cả 
+      <svg class="ce-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </a>
+  </header>
+  <div class="ce-card__body" style="padding:0">
+    {% if not recent_projects %}
+      {% include "components/empty_state.html" with title="Chưa có dự án nào" desc="Tạo dự án đầu tiên để bắt đầu luồng đánh giá sẵn sàng phát hành." action_html='<a href="/projects/new/" class="ce-btn ce-btn--primary">Tạo project mới</a>' %}
+    {% else %}
+      {% for p in recent_projects %}
+        <a href="/projects/{{ p.id }}/" class="ce-listitem" hx-get="/projects/{{ p.id }}/" hx-target="#main-content" hx-push-url="true" style="text-decoration: none; color: inherit;">
+          <span class="picon pa-{{ forloop.counter0|default:0|add:1|stringformat:'d' }}">{{ p.abbr }}</span>
+          <div class="main">
+            <div class="name">{{ p.name }} <span class="ce-chip">v{{ p.latest_seq }} {% if p.latest_label %}&middot; {{ p.latest_label }}{% endif %}</span></div>
+            <div class="sub">Tier {{ p.tier }} &middot; W {{ p.w_testing }}/{{ p.w_code }} &middot; Phân tích {{ p.time_ago }}</div>
+          </div>
+          <div class="right">
+            {% if p.final_score != None %}
+              <span class="mono" style="font-weight:800;font-size:15px">{{ p.final_score|floatformat:1 }}</span>
+              {% include "components/badges/delta.html" with delta=p.delta %}
+            {% else %}
+              <span class="u-muted">&mdash;</span>
+            {% endif %}
+            
+            {% include "components/badges/verdict.html" with verdict=p.verdict %}
+            
+            <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </a>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

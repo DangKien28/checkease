@@ -1,0 +1,16 @@
+<section class="ce-card ce-stat">
+  <div class="u-flex u-items-center u-justify-between">
+    <span class="ce-stat__label">{{ label }}</span>
+    {% if icon %}
+      <span class="ce-stat__icon" style="{{ icon_bg|default:'' }}">
+        <svg class="ce-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#icon-{{ icon }}"></use>
+        </svg>
+      </span>
+    {% endif %}
+  </div>
+  <div class="ce-stat__value">{{ value }}</div>
+  {% if meta %}
+    <div class="ce-stat__meta">{{ meta }}</div>
+  {% endif %}
+</section>

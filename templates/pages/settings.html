@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cài đặt hệ thống - Checkease</div>
+{% endblock %}
+{% block breadcrumbs %}<span class="current">Cài đặt</span>{% endblock %}
+
+{% block content %}
+<div class="ce-pagehead">
+  <div>
+    <div class="ce-pagehead__title">Cài đặt</div>
+    <div class="ce-pagehead__desc">Cấu hình LLM, ngưỡng trọng số cho từng loại dự án (tier) và ngưỡng phán quyết của Gate Engine.</div>
+  </div>
+</div>
+
+<div x-data="{ activeTab: 'llm' }">
+<div class="ce-tabs" role="tablist">
+  <button class="ce-tabs__item" :class="activeTab === 'llm' ? 'is-active' : ''" @click="activeTab = 'llm'">
+    <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> API Key (LLM)
+  </button>
+  <button class="ce-tabs__item" :class="activeTab === 'tier' ? 'is-active' : ''" @click="activeTab = 'tier'">
+    <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Ngưỡng theo Tier
+  </button>
+  <button class="ce-tabs__item" :class="activeTab === 'thresholds' ? 'is-active' : ''" @click="activeTab = 'thresholds'">
+    <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> Ngưỡng kết quả
+  </button>
+</div>
+
+<!-- TIER 1: LLM API -->
+<div x-show="activeTab === 'llm'">
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <div class="u-flex u-gap-4" style="flex-wrap:wrap">
+        <div class="ce-field" style="flex:1;min-width:220px">
+          <label class="ce-label">Nhà cung cấp</label>
+          <select class="ce-select" name="provider">
+            <option value="openai">OpenAI (GPT-4o)</option>
+            <option value="gemini" selected>Google Gemini 1.5 Pro</option>
+            <option value="anthropic">Anthropic Claude Sonnet</option>
+          </select>
+        </div>
+        <div class="ce-field" style="flex:1;min-width:220px">
+          <label class="ce-label">Model</label>
+          <input type="text" class="ce-input" value="gemini-1.5-pro-latest" />
+          <div class="ce-hint">Không hard-code trong mã — luôn lưu trong Settings và ghi vào repro_meta.</div>
+        </div>
+      </div>
+      
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">API Key</label>
+        <input type="password" class="ce-input" value="sk-xxxxxxxxxxxxxxxxxxxxxxxx" placeholder="sk-…" />
+        <div class="ce-hint">Được mã hóa bằng FIELD_ENCRYPTION_KEY ở backend; hiển thị dạng ẩn.</div>
+      </div>
+      
+      <div class="ce-field u-mt-3">
+        <label class="ce-toggle">
+          <input type="checkbox" checked />
+          <span class="track"></span>
+          <div class="lbl-wrap">
+            <span class="lbl" style="font-weight:600">Gửi mã nguồn cho LLM</span>
+            <div class="desc" style="font-size:12px;color:var(--text-3);margin-top:2px">Tắt nếu lo rò rỉ IP — LLM chỉ nhận số liệu tổng hợp.</div>
+          </div>
+        </label>
+      </div>
+      
+      <div class="u-flex u-gap-2 u-mt-4" style="align-items:center">
+        <button class="ce-btn ce-btn--secondary">
+          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Kiểm tra kết nối</span>
+        </button>
+        <span class="u-muted" style="font-size:12.5px">Kiểm tra bằng một lời gọi thử (không tính phí mô hình lớn).</span>
+      </div>
+      
+      <div class="u-flex u-justify-end u-mt-4">
+        <button class="ce-btn ce-btn--primary">
+          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Lưu cài đặt LLM</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- TIER 2: Ngưỡng theo Tier -->
+<div x-show="activeTab === 'tier'" style="display: none;">
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <p class="u-muted" style="font-size:13px;margin-bottom:14px">Ngưỡng điểm tổng hợp cho từng loại dự án. Ràng buộc: <b>PASS &gt; WARNING ≥ 0</b>. Dùng cho mọi dự án tier tương ứng (trừ khi dự án ghi đè cục bộ).</p>
+      
+      <div class="ce-table-wrap">
+        <table class="ce-table">
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>Loại hệ thống</th>
+              <th style="width:150px">Ngưỡng PASS ≥</th>
+              <th style="width:170px">Ngưỡng WARNING ≥</th>
+              <th style="width:120px">Ghi đè</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="ce-badge" style="background:var(--verdict-fail-bg);color:var(--verdict-fail-fg)">Tier 1</span></td>
+              <td>Tài chính, y tế, dữ liệu nhạy cảm</td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="95" /></td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="80" /></td>
+              <td class="u-muted" style="font-size:12px">Mặc định</td>
+            </tr>
+            <tr>
+              <td><span class="ce-badge" style="background:var(--verdict-warn-bg);color:var(--verdict-warn-fg)">Tier 2</span></td>
+              <td>Dịch vụ nội bộ, API Gateway</td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="80" /></td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="60" /></td>
+              <td class="u-muted" style="font-size:12px">Mặc định</td>
+            </tr>
+            <tr>
+              <td><span class="ce-badge" style="background:var(--brand-100);color:var(--brand-800)">Tier 3</span></td>
+              <td>Công cụ phụ trợ, thử nghiệm</td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="60" /></td>
+              <td><input class="ce-input" type="number" min="0" max="100" value="40" /></td>
+              <td class="u-muted" style="font-size:12px">Mặc định</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="u-flex u-justify-between u-mt-4">
+        <button class="ce-btn ce-btn--ghost">
+          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Khôi phục mặc định</span>
+        </button>
+        <button class="ce-btn ce-btn--primary">
+          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Lưu ngưỡng Tier</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- TIER 3: Ngưỡng kết quả & Floor -->
+<div x-show="activeTab === 'thresholds'" style="display: none;">
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <p class="u-muted" style="font-size:13px;margin-bottom:16px">Ngưỡng sàn và ràng buộc cứng của Gate Engine ba lớp (L0 Evidence &rarr; L1 Hard Gate &rarr; L2 Floor + Weighted).</p>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">
+        <div class="ce-field">
+          <label class="ce-label">branch_floor — sàn nhánh (F3)</label>
+          <input type="number" class="ce-input" value="60" />
+          <div class="ce-hint">min(Testing, Code) dưới sàn &rArr; tối đa WARNING.</div>
+        </div>
+        <div class="ce-field">
+          <label class="ce-label">test_floor_fail — sàn FAIL (F2)</label>
+          <input type="number" class="ce-input" value="40" />
+          <div class="ce-hint">Testing Score dưới sàn &rArr; FAIL.</div>
+        </div>
+        <div class="ce-field">
+          <label class="ce-label">min_cases — số case tối thiểu (L0)</label>
+          <input type="number" class="ce-input" value="10" />
+          <div class="ce-hint">Thiếu case &rArr; tối đa WARNING (LOW_TEST_EVIDENCE).</div>
+        </div>
+        <div class="ce-field">
+          <label class="ce-label">unknown_ratio_max (L0)</label>
+          <input type="number" class="ce-input" step="0.05" value="0.3" />
+          <div class="ce-hint">Ví dụ 0.3 = 30%.</div>
+        </div>
+      </div>
+      
+      <div class="ce-field u-mt-3">
+        <label class="ce-toggle">
+          <input type="checkbox" checked />
+          <span class="track"></span>
+          <div class="lbl-wrap">
+            <span class="lbl" style="font-weight:600">Hard Gate cho defect Critical</span>
+            <div class="desc" style="font-size:12px;color:var(--text-3);margin-top:2px">Ràng buộc cứng L1 — vi phạm &rArr; FAIL bất kể điểm.</div>
+          </div>
+        </label>
+      </div>
+      
+      <details style="margin-top:18px">
+        <summary style="cursor:pointer;font-weight:700;font-size:13.5px;color:var(--text-2)">Lưu trữ & hạn mức</summary>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px">
+          <div class="ce-field">
+            <label class="ce-label">Kích thước ZIP tối đa (MB)</label>
+            <input type="number" class="ce-input" value="200" />
+            <div class="ce-hint">Từ chối ngay khi xin presigned URL.</div>
+          </div>
+          <div class="ce-field">
+            <label class="ce-label">Thời gian giữ ZIP (ngày)</label>
+            <input type="number" class="ce-input" value="90" />
+            <div class="ce-hint">Xóa mềm; xóa vật lý sau N ngày khi ref_count = 0.</div>
+          </div>
+        </div>
+      </details>
+      
+      <div class="u-flex u-justify-end u-mt-4">
+        <button class="ce-btn ce-btn--primary">
+          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Lưu ngưỡng kết quả</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+

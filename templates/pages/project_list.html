@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Danh sách Dự án - Checkease{% endblock %}
+{% block breadcrumbs %}
+  <a href="/overview/" hx-get="/overview/" hx-target="#main-content" hx-push-url="true">Tổng quan</a>
+  <span class="sep">/</span>
+  <span class="current">Dự án</span>
+{% endblock %}
+
+{% block content %}
+<div class="ce-pagehead">
+  <div>
+    <div class="ce-pagehead__title">Danh sách Dự án</div>
+    <div class="ce-pagehead__desc">Quản lý các dự án phần mềm và cấu hình trọng số đánh giá Gate Engine.</div>
+  </div>
+  <div class="ce-pagehead__actions">
+    <a href="/projects/new/" class="ce-btn ce-btn--primary" hx-get="/projects/new/" hx-target="#main-content" hx-push-url="true">
+      <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <span>Tạo project mới</span>
+    </a>
+  </div>
+</div>
+
+<div class="ce-card">
+  <div class="ce-table-wrap">
+    {% if not projects %}
+      {% include "components/empty_state.html" with title="Chưa có dự án nào" %}
+    {% else %}
+    <table class="ce-table">
+      <thead>
+        <tr>
+          <th style="width: 35%">Tên dự án</th>
+          <th>Cấu hình Tier &amp; Trọng số</th>
+          <th>Lần phân tích cuối</th>
+          <th style="width: 50px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in projects %}
+        <tr class="is-clickable" hx-get="/projects/{{ p.id }}/" hx-target="#main-content" hx-push-url="true" style="cursor: pointer;">
+          <td>
+            <div style="font-weight:600;color:var(--text-1);margin-bottom:2px">{{ p.name }}</div>
+            <div style="font-size:12px;color:var(--text-3)" class="u-ellipsis" title="{{ p.description }}">{{ p.description }}</div>
+          </td>
+          <td>
+            <div class="u-flex u-items-center u-gap-2">
+              {% include "components/badges/tier.html" with tier=p.tier %}
+              <span class="ce-chip" title="Trọng số: Testing {{ p.w_testing }} / Code {{ p.w_code }}">W: {{ p.w_testing }} / {{ p.w_code }}</span>
+            </div>
+          </td>
+          <td>
+            {% if p.latest_run %}
+              <div class="u-flex u-items-center u-gap-2 u-mb-1">
+                {% include "components/badges/verdict.html" with verdict=p.verdict %}
+                {% if p.final_score != None %}<strong class="mono">{{ p.final_score|floatformat:1 }}</strong>{% endif %}
+              </div>
+              <div style="font-size:12px;color:var(--text-3)">{{ p.time_ago }} &middot; v{{ p.latest_seq }}</div>
+            {% else %}
+              <span class="u-muted">Chưa chạy</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right">
+            <svg class="ce-icon u-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

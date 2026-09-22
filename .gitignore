@@ -1,0 +1,60 @@
+﻿# Python / Django
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# === SECURITY RULES (from 08-SECURITY-CHECKLIST.md) ===
+# Secrets and Configs
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.p12
+credentials.*
+secrets.*
+
+# === DEVELOPER SPECIFIC ===
+KIEN_TASKS.md
+understand_md/
+init-scripts/
+
+checkease-ui/
+
+
+#Dev-Ops
+docker-compose.yml
+Dockerfile

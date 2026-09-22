@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Tạo Dự án mới - Checkease{% endblock %}
+
+{% block content %}
+<a class="ce-backlink" href="/projects/" hx-get="/projects/" hx-push-url="true">
+  <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  <span>Danh sách dự án</span>
+</a>
+
+<div class="ce-pagehead">
+  <div><div class="ce-pagehead__title">Tạo dự án mới</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px;padding-bottom:100px;">
+  <!-- KHU 1 -->
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <div class="u-flex u-items-center u-gap-3 u-mb-4">
+        <span class="ce-section-num">1</span>
+        <h3 style="font-size:15.5px">Thông tin dự án</h3>
+      </div>
+      <div class="u-flex u-gap-4" style="flex-wrap:wrap">
+        <div class="ce-field" style="flex:1;min-width:240px">
+          <label class="ce-label">Tên dự án <span style="color:var(--sev-critical)">*</span></label>
+          <input type="text" class="ce-input" placeholder="VD: E-commerce Backend" />
+        </div>
+        <div class="ce-field" style="flex:1;min-width:240px">
+          <label class="ce-label">Nhãn phiên bản (tùy chọn)</label>
+          <input type="text" class="ce-input" placeholder="VD: Sprint 14, commit abc123…" />
+        </div>
+      </div>
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">Mô tả</label>
+        <textarea class="ce-input" rows="3" placeholder="Mô tả ngắn về hệ thống, phạm vi đánh giá…"></textarea>
+      </div>
+      
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">Loại tier <span style="color:var(--sev-critical)">*</span></label>
+        <div class="ce-radiocards" x-data="{ tier: '2' }">
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="1" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              </div>
+              <div class="main"><b>Tier 1</b><span>Tài chính, y tế, dữ liệu nhạy cảm</span></div>
+            </div>
+          </label>
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="2" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+              </div>
+              <div class="main"><b>Tier 2</b><span>Dịch vụ nội bộ, API Gateway</span></div>
+            </div>
+          </label>
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="3" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              </div>
+              <div class="main"><b>Tier 3</b><span>Công cụ phụ trợ, thử nghiệm</span></div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KHU 2 -->
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <div class="u-flex u-items-center u-gap-3 u-mb-4">
+        <span class="ce-section-num">2</span>
+        <h3 style="font-size:15.5px">Bằng chứng đánh giá (2 nhánh)</h3>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+        <div class="ce-card" style="box-shadow:none">
+          <div class="ce-card__body ce-dropzone">
+            <svg class="ce-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            <div class="t">Tải lên mã nguồn (Source code)</div>
+            <div class="s">Kéo–thả hoặc bấm để chọn tệp .zip</div>
+          </div>
+        </div>
+        <div class="ce-card" style="box-shadow:none">
+          <div class="ce-card__body ce-dropzone">
+            <svg class="ce-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            <div class="t">Tải lên tài liệu Test</div>
+            <div class="s">Kéo–thả hoặc bấm để chọn nhiều tệp (.pdf, .docx, .xlsx, .xml)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KHU 3 -->
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <div class="u-flex u-items-center u-gap-3 u-mb-4">
+        <span class="ce-section-num">3</span>
+        <h3 style="font-size:15.5px">Cấu hình đánh giá & Settings</h3>
+      </div>
+      <div class="ce-field">
+        <label class="ce-label">Trọng số hai nhánh (Testing / Source Code)</label>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:6px" x-data="{ w: 0.5 }">
+          <span style="font-weight:600;font-size:13px;width:35px;text-align:right" x-text="(w * 100).toFixed(0) + '%'">50%</span>
+          <input type="range" name="w_testing" class="ce-slider" min="0" max="1" step="0.05" x-model="w" style="flex:1" />
+          <span style="font-weight:600;font-size:13px;width:35px" x-text="((1 - w) * 100).toFixed(0) + '%'">50%</span>
+        </div>
+      </div>
+      
+      <div class="ce-field" style="margin:14px 0 18px">
+        <label class="ce-toggle">
+          <input type="checkbox" checked />
+          <span class="track"></span>
+          <div class="lbl-wrap">
+            <span class="lbl" style="font-weight:600">Hard Gate cho defect Critical</span>
+          </div>
+        </label>
+      </div>
+
+      <div x-data="{ thMode: 'tier' }">
+      <div class="ce-field">
+        <label class="ce-label">Ngưỡng phán quyết</label>
+        <div class="ce-segmented">
+          <button type="button" :class="thMode === 'tier' ? 'is-active' : ''" @click="thMode = 'tier'">Theo Tier (mặc định)</button>
+          <button type="button" :class="thMode === 'override' ? 'is-active' : ''" @click="thMode = 'override'">Ghi đè cho dự án này</button>
+        </div>
+      </div>
+      
+      <div x-show="thMode === 'override'" style="display:none;margin-top:12px">
+        <div class="u-flex u-gap-4" style="flex-wrap:wrap;max-width:440px">
+          <div class="ce-field" style="flex:1;min-width:150px">
+            <label class="ce-label">Ngưỡng PASS (≥)</label>
+            <input type="number" class="ce-input" value="80" />
+          </div>
+          <div class="ce-field" style="flex:1;min-width:150px">
+            <label class="ce-label">Ngưỡng WARNING (≥)</label>
+            <input type="number" class="ce-input" value="60" />
+          </div>
+        </div>
+      </div>
+</div>
+      
+      <details style="margin-top:18px">
+        <summary style="cursor:pointer;font-weight:700;font-size:13.5px;color:var(--text-2)">Cấu hình nâng cao</summary>
+        <div class="u-flex u-gap-4 u-mt-4" style="flex-wrap:wrap">
+          <div class="ce-field" style="flex:1;min-width:170px">
+            <label class="ce-label">Sàn điểm mỗi nhánh</label>
+            <input type="number" class="ce-input" value="40" />
+          </div>
+          <div class="ce-field" style="flex:1;min-width:170px">
+            <label class="ce-label">Sàn điểm nhánh Test</label>
+            <input type="number" class="ce-input" value="30" />
+          </div>
+          <div class="ce-field" style="flex:1;min-width:170px">
+            <label class="ce-label">Số test case tối thiểu</label>
+            <input type="number" class="ce-input" value="10" />
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+</div>
+
+<!-- ACTION BAR -->
+<div class="ce-actionbar">
+  <div style="flex:1;min-width:0">
+    <div style="font-weight:700;font-size:13.5px">Sẵn sàng phân tích?</div>
+  </div>
+  <button class="ce-btn ce-btn--secondary" onclick="window.history.back()">Hủy</button>
+  <button class="ce-btn ce-btn--primary ce-btn--lg">
+    <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Bắt đầu phân tích</span>
+  </button>
+</div>
+{% endblock %}

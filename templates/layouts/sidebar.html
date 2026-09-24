@@ -1,8 +1,8 @@
 {% load static %}
 <aside class="ce-sidebar">
-  <div class="ce-sidebar__brand" style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px 18px 16px;">
+  <div class="ce-sidebar__brand" style="flex-direction: column; align-items: center; gap: 8px; padding: 24px 18px 16px;">
     <img src="{% static 'images/logo_checkease.png' %}" alt="Checkease Logo" style="width: 56px; height: 56px; object-fit: contain;" />
-    <div style="margin-top: 4px;">
+    <div style="margin-top: 4px; text-align: center;">
       <span style="font-family: 'Brush Script MT', 'Segoe Script', 'Comic Sans MS', cursive; font-size: 28px; font-weight: normal; line-height: 1; color: var(--brand-600); display: block; margin-bottom: 2px;">Checkease</span>
       <small style="display: block; font-size: 10px; font-weight: 500; color: var(--text-3); letter-spacing: 0.05em;">RELEASE READINESS GATEWAY</small>
     </div>
@@ -27,13 +27,33 @@
   </nav>
   <div class="ce-sidebar__spacer"></div>
   <div class="ce-sidebar__user">
-    <span class="ce-avatar">{{ request.user.username|default:"U"|slice:":2"|upper }}</span>
+    <span class="ce-avatar">{{ request.user.name|default:request.user.email|default:"U"|slice:":2"|upper }}</span>
     <div class="info">
-      <div class="name u-ellipsis">{{ request.user.username|default:"Guest" }}</div>
-      <div class="mail u-ellipsis">{{ request.user.email|default:"" }}</div>
+      <div class="name u-ellipsis">{{ request.user.name|default:request.user.email }}</div>
+      <div class="mail u-ellipsis">{{ request.user.email }}</div>
     </div>
-    <button class="logout-btn" title="Đăng xuất">
-      <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
-    </button>
+    <form action="/logout/" method="post" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn" title="Đăng xuất" style="background:none;border:none;cursor:pointer;">
+        <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </form>
   </div>
 </aside>
+
+<script>
+  // Cập nhật trạng thái is-active cho sidebar khi URL thay đổi (Bao gồm cả click từ menu và từ trong trang)
+  document.addEventListener('htmx:pushedIntoHistory', (event) => {
+    const path = new URL(event.detail.path.url || window.location.href).pathname;
+    const navItems = document.querySelectorAll('.ce-nav__item');
+    navItems.forEach(item => {
+      item.classList.remove('is-active');
+      const href = item.getAttribute('href');
+      if (path.startsWith(href) && href !== '/') {
+        item.classList.add('is-active');
+      } else if (path === '/' && href === '/') {
+        item.classList.add('is-active');
+      }
+    });
+  });
+</script>

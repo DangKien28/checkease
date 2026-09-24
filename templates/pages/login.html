@@ -5,8 +5,11 @@
   <div class="ce-card__body">
     <h2 style="font-size:21px">Đăng nhập</h2>
     <p class="u-muted" style="margin:6px 0 22px;font-size:13.5px">Truy cập cổng kiểm soát mức độ sẵn sàng phát hành của bạn.</p>
-    <form action="/login/" method="POST" hx-post="/login/" hx-target="body">
+    <form action="/login/" method="POST">
       {% csrf_token %}
+      {% if error %}
+      <div style="color: red; margin-bottom: 15px; font-size: 14px; background: #fee2e2; padding: 10px; border-radius: 4px;">{{ error }}</div>
+      {% endif %}
       <div class="ce-field">
         <label class="ce-label">Email</label>
         <input type="email" name="email" class="ce-input" placeholder="ban@congty.vn" required />

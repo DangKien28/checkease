@@ -61,7 +61,20 @@
             {% endif %}
           </td>
           <td style="text-align:right">
-            <svg class="ce-icon u-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            <div class="u-flex u-items-center u-gap-2" style="justify-content: flex-end;">
+              <button 
+                class="ce-btn ce-btn--ghost ce-btn--sm" 
+                style="color: #dc2626; padding: 4px;"
+                hx-delete="/projects/{{ p.id }}/delete/" 
+                hx-target="closest tr" 
+                hx-swap="outerHTML" 
+                hx-confirm="Bạn có chắc chắn muốn xóa dự án này vĩnh viễn không?"
+                onclick="event.stopPropagation();"
+                title="Xóa dự án">
+                <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+              <svg class="ce-icon u-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
           </td>
         </tr>
         {% endfor %}

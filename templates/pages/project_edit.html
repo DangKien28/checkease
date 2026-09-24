@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Chỉnh sửa Dự án - Checkease{% endblock %}
+
+{% block content %}
+<a class="ce-backlink" href="/projects/" hx-get="/projects/" hx-push-url="true">
+  <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  <span>Danh sách dự án</span>
+</a>
+
+<div class="ce-pagehead">
+  <div><div class="ce-pagehead__title">Chỉnh sửa thông tin dự án</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px;padding-bottom:100px;">
+  <!-- KHU 1 -->
+  <section class="ce-card">
+    <div class="ce-card__body">
+      <div class="u-flex u-items-center u-gap-3 u-mb-4">
+        <span class="ce-section-num">1</span>
+        <h3 style="font-size:15.5px">Thông tin dự án</h3>
+      </div>
+      <div class="u-flex u-gap-4" style="flex-wrap:wrap">
+        <div class="ce-field" style="flex:1;min-width:240px">
+          <label class="ce-label">Tên dự án <span style="color:var(--sev-critical)">*</span></label>
+          <input type="text" class="ce-input" placeholder="VD: E-commerce Backend" value="{{ project.name }}" id="project_name" />
+        </div>
+        <div class="ce-field" style="flex:1;min-width:240px">
+          <label class="ce-label">Nhãn phiên bản (tùy chọn)</label>
+          <input type="text" class="ce-input" placeholder="VD: Sprint 14, commit abc123…" />
+        </div>
+      </div>
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">Mô tả</label>
+        <textarea class="ce-input" rows="3" placeholder="Mô tả ngắn về hệ thống, phạm vi đánh giá…" id="project_desc">{{ project.description|default_if_none:"" }}</textarea>
+      </div>
+      
+      <div class="ce-field u-mt-3">
+        <label class="ce-label">Loại tier <span style="color:var(--sev-critical)">*</span></label>
+        <div class="ce-radiocards" x-data="{ tier: '{{ tier_val }}' }">
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="1" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              </div>
+              <div class="main"><b>Tier 1</b><span>Tài chính, y tế, dữ liệu nhạy cảm</span></div>
+            </div>
+          </label>
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="2" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+              </div>
+              <div class="main"><b>Tier 2</b><span>Dịch vụ nội bộ, API Gateway</span></div>
+            </div>
+          </label>
+          <label class="ce-radiocard">
+            <input type="radio" name="tier" value="3" x-model="tier" />
+            <div class="ce-radiocard__content">
+              <div class="ico">
+                <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              </div>
+              <div class="main"><b>Tier 3</b><span>Công cụ phụ trợ, thử nghiệm</span></div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ACTION BAR -->
+<div class="ce-actionbar">
+  <div style="flex:1;min-width:0">
+    <div style="font-weight:700;font-size:13.5px">Bạn muốn lưu thay đổi?</div>
+  </div>
+  <button class="ce-btn ce-btn--secondary" onclick="window.history.back()">Hủy</button>
+  <button class="ce-btn ce-btn--primary ce-btn--lg" onclick="updateProject()" id="btnSubmit">
+    <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <span id="btnSubmitText">Lưu thay đổi</span>
+  </button>
+</div>
+
+<script>
+  async function updateProject() {
+    const projectNameInput = document.getElementById('project_name');
+    const projectDescInput = document.getElementById('project_desc');
+    const tierInput = document.querySelector('input[name="tier"]:checked');
+    
+    const name = projectNameInput ? projectNameInput.value.trim() : '';
+    if (!name) {
+      alert("Vui lòng nhập tên dự án!");
+      return;
+    }
+    
+    const btn = document.getElementById('btnSubmit');
+    const btnText = document.getElementById('btnSubmitText');
+    btn.disabled = true;
+    btnText.innerText = "Đang lưu...";
+    
+    try {
+      const resUpdate = await fetch('/api/projects/{{ project.id }}/update/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: name,
+          description: projectDescInput ? projectDescInput.value : '',
+          tier: tierInput ? tierInput.value : '3'
+        })
+      });
+      if (!resUpdate.ok) throw new Error("Lỗi khi lưu dự án trên Backend");
+      
+      alert("Đã lưu dự án thành công!");
+      window.location.href = "/projects/";
+    } catch (e) {
+      console.error(e);
+      alert("Lỗi: " + e.message);
+    } finally {
+      btn.disabled = false;
+      btnText.innerText = "Lưu thay đổi";
+    }
+  }
+</script>
+{% endblock %}

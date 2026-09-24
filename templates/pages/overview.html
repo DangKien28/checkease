@@ -7,7 +7,7 @@
 {% block content %}
 <div class="ce-pagehead">
   <div>
-    <div class="ce-pagehead__title">Tổng quan</div>
+    <div class="ce-pagehead__title">Xin chào, {{ request.user.name|default:request.user.email }}!</div>
     <div class="ce-pagehead__desc">Bức tranh toàn cảnh về mức độ sẵn sàng phát hành — một nơi duy nhất để biết phần mềm đã sẵn sàng hay chưa.</div>
   </div>
 </div>

@@ -12,17 +12,17 @@
   <div>
     <div class="ce-pagehead__title" style="gap:8px">
       <svg class="ce-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-      E-commerce Backend
-      <span class="ce-chip">v1</span>
+      {{ project.name }}
+      <span class="ce-chip">v{{ v_num }}</span>
     </div>
-    <div class="ce-pagehead__desc">Mô tả về dự án (Mockup)</div>
+    <div class="ce-pagehead__desc">{{ project.description|default:"Chưa có mô tả" }}</div>
   </div>
   <div class="ce-pagehead__actions">
     <button class="ce-btn ce-btn--secondary">
       <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
       Tải lên phiên bản mới
     </button>
-    <a href="/projects/{{ project_id }}/edit/" class="ce-btn ce-btn--secondary" hx-get="/projects/new/" hx-target="#main-content" hx-push-url="true">
+    <a href="/projects/{{ project.id }}/edit/" class="ce-btn ce-btn--secondary" hx-get="/projects/{{ project.id }}/edit/" hx-target="#main-content" hx-push-url="true">
       <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       Chỉnh sửa dự án
     </a>
@@ -72,9 +72,9 @@
       </div>
     </div>
     <div class="u-flex u-gap-2 u-mt-4" style="flex-wrap:wrap">
-      <span class="ce-chip">Tier <b>2</b></span>
-      <span class="ce-chip">W1 <b>0.5</b> &middot; W2 <b>0.5</b></span>
-      <span class="ce-chip">Ngưỡng: PASS &ge; <b>80</b> &middot; WARNING &ge; <b>60</b></span>
+      <span class="ce-chip">Tier <b>{{ tier_val }}</b></span>
+      <span class="ce-chip">W1 <b>{{ w_testing }}</b> &middot; W2 <b>{{ w_code }}</b></span>
+      <span class="ce-chip">Ngưỡng: PASS &ge; <b>{{ pass_th }}</b> &middot; WARNING &ge; <b>{{ warn_th }}</b></span>
       <span class="ce-chip">Hard Gate Critical: <b>Bật</b></span>
     </div>
   </div>
@@ -85,8 +85,8 @@
   <div class="ce-card__body">
     <div class="u-flex u-items-center u-gap-2 u-mb-4"><b style="font-size:14px">Thông tin & cấu hình dự án</b></div>
     <div class="ce-info-list">
-      <div class="item"><div class="k">Loại tier</div><div class="v"><span class="ce-badge" style="background:var(--verdict-warn-bg);color:var(--verdict-warn-fg)">Tier 2</span></div></div>
-      <div class="item"><div class="k">Trọng số (Testing / Code)</div><div class="v mono">0.5 / 0.5</div></div>
+      <div class="item"><div class="k">Loại tier</div><div class="v"><span class="ce-badge" style="background:var(--verdict-warn-bg);color:var(--verdict-warn-fg)">Tier {{ tier_val }}</span></div></div>
+      <div class="item"><div class="k">Trọng số (Testing / Code)</div><div class="v mono">{{ w_testing }} / {{ w_code }}</div></div>
       <div class="item"><div class="k">Sàn nhánh (branch_floor)</div><div class="v mono">40</div></div>
       <div class="item"><div class="k">Sàn FAIL Testing (F2)</div><div class="v mono">30</div></div>
     </div>

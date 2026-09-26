@@ -1,0 +1,74 @@
+# Custom rules Semgrep cho Checkease — chỉ rule ở thư mục này mới được đọc `hard_gate`
+# Mỗi rule bắt buộc có: metadata.category, metadata.checkease_severity, metadata.hard_gate (nếu áp dụng)
+rules:
+  # 1. Hardcoded secret (Python)
+  - id: checkease-hardcoded-secret
+    languages: [python]
+    message: "Hardcoded secret/credential trong mã nguồn — đặt vào biến môi trường."
+    severity: ERROR
+    metadata:
+      category: security
+      checkease_severity: Critical
+      hard_gate: true
+      cwe: "CWE-798"
+    patterns:
+      - pattern-either:
+          - pattern: $KEY = "..."
+          - pattern: $KEY = '...'
+          - pattern: $KEY = f"..."
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: "(?i).*(secret|password|passwd|api_key|apikey|token|credential).*"
+
+  # 2. SQL Injection thô (string concat vào query)
+  - id: checkease-sql-injection
+    languages: [python]
+    message: "SQL Injection: nối chuỗi vào query — dùng parameterized query."
+    severity: ERROR
+    metadata:
+      category: security
+      checkease_severity: Critical
+      hard_gate: true
+      cwe: "CWE-89"
+    patterns:
+      - pattern-either:
+          - pattern: $CUR.execute($Q + $X)
+          - pattern: $CUR.execute(f"...{$X}...")
+          - pattern: $CUR.execute("..." % ($X, ...))
+
+  # 3. eval()/exec() không an toàn
+  - id: checkease-eval-exec
+    languages: [python]
+    message: "eval()/exec() với input không đáng tin — nguy cơ code injection."
+    severity: WARNING
+    metadata:
+      category: security
+      checkease_severity: Major
+      hard_gate: false
+      cwe: "CWE-95"
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+
+  # 4. assert dùng để kiểm tra input (bị tắt khi chạy -O)
+  - id: checkease-assert-in-code
+    languages: [python]
+    message: "assert dùng để validate input — sẽ bị bỏ khi Python chạy với -O."
+    severity: INFO
+    metadata:
+      category: reliability
+      checkease_severity: Minor
+      hard_gate: false
+    pattern: assert $X, $MSG
+
+  # 5. So sánh None bằng == thay vì is
+  - id: checkease-none-comparison
+    languages: [python]
+    message: "So sánh None bằng == thay vì is — có thể bị override __eq__."
+    severity: INFO
+    metadata:
+      category: maintainability
+      checkease_severity: Minor
+      hard_gate: false
+    pattern: $X == None

@@ -4,13 +4,13 @@ CodeScore = 0.5*S_security + 0.3*S_reliability + 0.2*S_maintainability
 
 - Bảng phạt điểm 3 nhóm × 3 mức severity (Critical/Major/Minor).
 - Loại trùng lặp theo fingerprint trước khi tính.
-- Trần penalty mỗi rule (rule_penalty_cap) — mặc định 3 lần lặp.
+- Trần penalty mỗi rule (rule_penalty_cap, mặc định 3 lần lặp).
 - Chỉ set CodeResult.status, không tự phán quyết final verdict.
 """
 
 from dataclasses import dataclass, field
 
-from apps.code_analysis.mappings import map_severity
+from apps.code_analysis.mappings import CATEGORY_FALLBACK, map_severity
 
 WEIGHTS = {"Security": 0.5, "Reliability": 0.3, "Maintainability": 0.2}
 
@@ -23,7 +23,6 @@ PENALTY_TABLE = {
     ("Reliability", "Critical"): 15.0,
     ("Reliability", "Major"): 6.0,
     ("Reliability", "Minor"): 1.5,
-    # Critical của Maintainability xử lý như Major
     ("Maintainability", "Critical"): 4.0,
     ("Maintainability", "Major"): 4.0,
     ("Maintainability", "Minor"): 1.0,
@@ -35,8 +34,6 @@ DEFAULT_RULE_PENALTY_CAP = 3
 # Ngưỡng Pass/Warning/Fail (mục 8.8)
 PASS_THRESHOLD = 80.0
 WARNING_THRESHOLD = 60.0
-
-SEVERITY_RANK = {"Critical": 3, "Major": 2, "Minor": 1}
 
 
 @dataclass
@@ -60,26 +57,49 @@ def _clamp(v, lo=0.0, hi=100.0):
     return max(lo, min(hi, v))
 
 
-def compute_code_score(findings: list, rule_penalty_cap: int = DEFAULT_RULE_PENALTY_CAP) -> CodeScoreResult:
+def _final_severity(f) -> str:
+    """Ưu tiên final_severity đã chốt ở pipeline/rule custom; nếu chưa có thì tự map."""
+    final = getattr(f, "final_severity", "") or ""
+    if final:
+        return final
+    if getattr(f, "hard_gate", False):
+        return "Critical"
+    return map_severity(
+        getattr(f, "severity", ""),
+        impact=getattr(f, "impact", "MEDIUM"),
+        confidence=getattr(f, "confidence", "MEDIUM"),
+        cwe=getattr(f, "cwe", "") or "",
+    )
+
+
+def compute_code_score(
+    findings: list,
+    rule_penalty_cap: int = DEFAULT_RULE_PENALTY_CAP,
+    pass_threshold: float | None = None,
+    warning_threshold: float | None = None,
+) -> CodeScoreResult:
     """Tính CodeScore từ list Finding (đã qua parser)."""
+    pass_threshold = PASS_THRESHOLD if pass_threshold is None else pass_threshold
+    warning_threshold = WARNING_THRESHOLD if warning_threshold is None else warning_threshold
+
     # Bước 1: loại trùng lặp theo fingerprint
     seen = set()
     unique = []
     for f in findings:
-        if f.fingerprint in seen:
+        fp = getattr(f, "fingerprint", "") or f"{getattr(f, 'rule_id', '')}:{id(f)}"
+        if fp in seen:
             continue
-        seen.add(f.fingerprint)
+        seen.add(fp)
         unique.append(f)
 
     # Bước 2: đếm số lần mỗi rule xuất hiện trong mỗi (category, severity)
     rule_occurrences = {}  # (rule_id, category, severity) -> count
     for f in unique:
-        # Tôn trọng final_severity đã set bởi pipeline (đã qua mapping + hard_gate);
-        # chỉ tự map khi caller đưa Finding thô chưa qua pipeline.
-        final_sev = getattr(f, "final_severity", None) or (
-            "Critical" if f.hard_gate else map_severity(f.severity, cwe=f.cwe)
-        )
-        key = (f.rule_id, f.category, final_sev)
+        # Category lạ (chưa map được) quy về Maintainability — không bỏ sót finding
+        category = getattr(f, "category", "") or ""
+        if category not in WEIGHTS:
+            category = CATEGORY_FALLBACK
+        key = (getattr(f, "rule_id", "unknown"), category, _final_severity(f))
         rule_occurrences[key] = rule_occurrences.get(key, 0) + 1
 
     # Bước 3: tính penalty theo (category, severity), có trần mỗi rule
@@ -87,12 +107,10 @@ def compute_code_score(findings: list, rule_penalty_cap: int = DEFAULT_RULE_PENA
     for (rule_id, category, severity), count in sorted(rule_occurrences.items()):
         eff_count = min(count, rule_penalty_cap)
         penalty_per = PENALTY_TABLE.get((category, severity), 1.0)
-        penalty = penalty_per * eff_count
-        if category in cat_state:
-            cat_state[category].raw_penalty += penalty
-            cat_state[category].counts[severity] = (
-                cat_state[category].counts.get(severity, 0) + count
-            )
+        cat_state[category].raw_penalty += penalty_per * eff_count
+        cat_state[category].counts[severity] = (
+            cat_state[category].counts.get(severity, 0) + count
+        )
 
     # Bước 4: tính điểm từng nhóm và điểm tổng
     total = 0.0
@@ -105,20 +123,18 @@ def compute_code_score(findings: list, rule_penalty_cap: int = DEFAULT_RULE_PENA
     code_score = round(_clamp(total), 2)
 
     # Bước 5: xác định status (chỉ set, không phán quyết verdict)
-    if code_score >= PASS_THRESHOLD:
+    if code_score >= pass_threshold:
         status = "Pass"
-    elif code_score >= WARNING_THRESHOLD:
+    elif code_score >= warning_threshold:
         status = "Warning"
     else:
         status = "Fail"
 
-    counts = {
-        c: dict(cat_state[c].counts) for c in WEIGHTS
-    }
+    counts = {c: dict(cat_state[c].counts) for c in WEIGHTS}
 
     # Ghi warning nếu có rule bị chặn bởi trần penalty
     warnings = []
-    for (rule_id, _cat, _sev), count in rule_occurrences.items():
+    for (rule_id, _cat, _sev), count in sorted(rule_occurrences.items()):
         if count > rule_penalty_cap:
             warnings.append(
                 f"Rule {rule_id} xuất hiện {count} lần, chỉ tính {rule_penalty_cap} lần (trần penalty)."

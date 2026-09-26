@@ -1,13 +1,16 @@
 """Severity & Category Mapping (checklist mục 6, 7).
 
-Không dùng ánh xạ thô ERROR→Critical. Dùng bảng ma trận severity × impact ×
-confidence + bảng ghi đè theo CWE. Bảng đặt trong config riêng để chỉnh sửa
-mà không đụng logic.
+- Không dùng ánh xạ thô ERROR→Critical: dùng ma trận severity × impact × confidence
+  + bảng ghi đè tối thiểu theo CWE (trích CWE bằng regex, tránh khớp substring
+  kiểu "cwe-79" nằm trong "cwe-798").
+- Bảng đặt trong config riêng để chỉnh mà không sửa logic; phiên bản bảng được
+  ghi vào scan_meta qua SEVERITY_MAP_VERSION.
 """
 
-# --- Bảng ánh xạ severity: (tool_severity, impact, confidence) -> final_severity
-# impact/confidence: HIGH | MEDIUM | LOW
-# Final: Critical | Major | Minor
+import re
+
+# --- Ma trận severity: (tool_severity, impact, confidence) -> final_severity
+# impact/confidence: HIGH | MEDIUM | LOW; final: Critical | Major | Minor
 SEVERITY_MATRIX = {
     ("ERROR", "HIGH", "HIGH"): "Critical",
     ("ERROR", "HIGH", "MEDIUM"): "Critical",
@@ -47,7 +50,8 @@ CWE_OVERRIDE_MIN = {
     "CWE-502": "Major",  # Deserialization
 }
 
-# Fallback nếu tổ hợp không có trong bảng (an toàn: coi là Minor)
+# Fallback khi tổ hợp không có trong bảng
+SEVERITY_FALLBACK_BY_TOOL = {"ERROR": "Major", "WARNING": "Minor", "INFO": "Minor"}
 SEVERITY_FALLBACK = "Minor"
 
 # --- Bảng ánh xạ category Semgrep -> 3 nhóm Checkease
@@ -62,8 +66,40 @@ CATEGORY_MAP = {
 }
 CATEGORY_FALLBACK = "Maintainability"
 
+SEVERITY_MAP_VERSION = "1.1"
 
-SEVERITY_MAP_VERSION = "1.0"
+_CWE_RE = re.compile(r"cwe[-_ ]?(\d+)", re.IGNORECASE)
+_VALID_LEVELS = {"HIGH", "MEDIUM", "LOW"}
+_RANK = {"Critical": 3, "Major": 2, "Minor": 1}
+
+
+def _norm_level(value: str, default: str = "MEDIUM") -> str:
+    value = (value or "").strip().upper()
+    return value if value in _VALID_LEVELS else default
+
+
+def _cwe_floors(cwe: str) -> list:
+    floors = []
+    for match in _CWE_RE.finditer(cwe or ""):
+        key = f"CWE-{match.group(1)}"
+        if key in CWE_OVERRIDE_MIN:
+            floors.append(CWE_OVERRIDE_MIN[key])
+    return floors
+
+
+def map_severity(tool_severity: str, impact: str = "MEDIUM",
+                 confidence: str = "MEDIUM", cwe: str = "") -> str:
+    severity = (tool_severity or "").strip().upper()
+    mapped = SEVERITY_MATRIX.get(
+        (severity, _norm_level(impact), _norm_level(confidence))
+    ) or SEVERITY_FALLBACK_BY_TOOL.get(severity, SEVERITY_FALLBACK)
+
+    floors = _cwe_floors(cwe)
+    if floors:
+        highest = max(floors, key=lambda f: _RANK[f])
+        if _RANK[mapped] < _RANK[highest]:
+            return highest
+    return mapped
 
 
 def map_category(semgrep_category: str) -> str:
@@ -74,22 +110,3 @@ def map_category(semgrep_category: str) -> str:
         if k in key:
             return v
     return CATEGORY_FALLBACK
-
-
-def map_severity(tool_severity: str, impact: str = "MEDIUM",
-                 confidence: str = "MEDIUM", cwe: str = "") -> str:
-    # Bước 1: ghi đè theo CWE
-    if cwe:
-        for cwe_key, floor in CWE_OVERRIDE_MIN.items():
-            if cwe and cwe_key.lower() in cwe.lower():
-                mapped = SEVERITY_MATRIX.get(
-                    (tool_severity.upper(), impact.upper(), confidence.upper()),
-                    SEVERITY_FALLBACK,
-                )
-                rank = {"Critical": 3, "Major": 2, "Minor": 1}
-                return floor if rank.get(mapped, 0) < rank[floor] else mapped
-    # Bước 2: tra bảng ma trận
-    return SEVERITY_MATRIX.get(
-        (tool_severity.upper(), impact.upper(), confidence.upper()),
-        SEVERITY_FALLBACK,
-    )

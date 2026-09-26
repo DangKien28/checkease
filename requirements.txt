@@ -5,3 +5,8 @@ semgrep
 boto3
 python-dotenv
 psycopg2-binary
+pyyaml
+
+# Dev/Test
+pytest
+pytest-cov

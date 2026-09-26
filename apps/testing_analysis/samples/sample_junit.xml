@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="ExampleTests" tests="4">
+        <testcase classname="tests.LoginTests" name="test_login_success" time="0.10" />
+        <testcase classname="tests.LoginTests" name="test_logout" time="0.05" />
+
+        <testcase classname="tests.LoginTests" name="test_login_wrong_password" time="0.08">
+            <failure message="Expected 401 but got 200">
+                AssertionError: Expected status code 401
+            </failure>
+        </testcase>
+
+        <testcase classname="tests.LoginTests" name="test_password_reset" time="0.01">
+            <skipped message="Not implemented" />
+        </testcase>
+    </testsuite>
+</testsuites>

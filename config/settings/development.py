@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'apps.projects',
     'apps.artifacts',
     'apps.gate_engine',
+    'apps.code_analysis',
 ]
 
 MIDDLEWARE = [

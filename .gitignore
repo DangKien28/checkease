@@ -30,6 +30,11 @@ env/
 ENV/
 
 
+# Test / Coverage
+.coverage
+.pytest_cache/
+htmlcov/
+
 # IDEs
 .idea/
 .vscode/

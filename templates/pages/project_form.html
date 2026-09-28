@@ -279,7 +279,7 @@
         body: JSON.stringify({
           name: name,
           description: projectDescInput ? projectDescInput.value : '',
-          tier: tierInput ? tierInput.value : '3'
+          tier: tierInput ? tierInput.value : '3', testing_weight: parseFloat(document.querySelector('input[name="w_testing"]')?.value || 0.5), source_code_weight: 1 - parseFloat(document.querySelector('input[name="w_testing"]')?.value || 0.5)
         })
       });
       if (!resCreate.ok) throw new Error("Lỗi khi tạo dự án trên Backend");
@@ -309,3 +309,4 @@
   }
 </script>
 {% endblock %}
+

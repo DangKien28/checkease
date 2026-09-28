@@ -1,14 +1,12 @@
-import os
+﻿import os
 import re
 import zipfile
 import tempfile
 
 class ArtifactPreChecker:
-    # Compile regex pattern ở mức class để tái sử dụng, tăng tốc độ quét
     SECRET_REGEX = re.compile(r'(?i)(api[_-]?key|secret|token|password|auth[_-]?token)\s*=\s*["\'][a-zA-Z0-9\-_]{16,}["\']')
 
     def run_check(self, file_path):
-        # Bước 1: Kiểm tra Magic Bytes
         try:
             with open(file_path, 'rb') as f:
                 magic = f.read(4)
@@ -27,10 +25,9 @@ class ArtifactPreChecker:
 
         temp_dir = None
         try:
-            # Bước 2 & 3: ZIP Bomb & Path Traversal
             total_size = 0
             file_count = 0
-            MAX_TOTAL_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
+            MAX_TOTAL_SIZE = 2 * 1024 * 1024 * 1024 
             MAX_FILE_COUNT = 50000
 
             with zipfile.ZipFile(file_path, 'r') as z:
@@ -38,7 +35,6 @@ class ArtifactPreChecker:
                     file_count += 1
                     total_size += info.file_size
                     
-                    # Bước 2: ZIP Bomb
                     if file_count > MAX_FILE_COUNT:
                         return {
                             "is_valid": False,
@@ -61,7 +57,6 @@ class ArtifactPreChecker:
                                 "error_message": "Highly compressed file detected (ratio > 100)."
                             }
                     
-                    # Bước 3: Path Traversal
                     if info.filename.startswith('/') or '../' in info.filename or '..\\' in info.filename:
                         return {
                             "is_valid": False,
@@ -69,17 +64,19 @@ class ArtifactPreChecker:
                             "error_message": f"Illegal path found in zip: {info.filename}"
                         }
                         
-                # Bước 4: Quét Hardcoded Secret
-                temp_dir = tempfile.TemporaryDirectory()
+                from django.conf import settings
+                project_tmp_dir = os.path.join(settings.BASE_DIR, 'tmp')
+                os.makedirs(project_tmp_dir, exist_ok=True)
+                temp_dir = tempfile.TemporaryDirectory(dir=project_tmp_dir)
                 extract_path = temp_dir.name
                 
-                # Giải nén toàn bộ
                 z.extractall(path=extract_path)
 
             for root, _, files in os.walk(extract_path):
                 for file_name in files:
+                    if '.venv' in root or file_name.endswith('.exe') or file_name.endswith('.dll') or file_name.endswith('.pyc'):
+                        continue
                     current_file_path = os.path.join(root, file_name)
-                    # Dùng errors='ignore' để bỏ qua lỗi encoding khi đọc nhầm file nhị phân
                     with open(current_file_path, 'r', encoding='utf-8', errors='ignore') as f:
                         for line in f:
                             if self.SECRET_REGEX.search(line):
@@ -90,7 +87,6 @@ class ArtifactPreChecker:
                                     "error_message": f"Secret found in file: {relative_path}"
                                 }
 
-            # Bước 5: Tất cả các bài kiểm tra đều vượt qua
             return {"is_valid": True}
 
         except zipfile.BadZipFile:
@@ -106,6 +102,6 @@ class ArtifactPreChecker:
                 "error_message": str(e)
             }
         finally:
-            # Bước 5 (tiếp): Đảm bảo xóa thư mục tạm
             if temp_dir is not None:
                 temp_dir.cleanup()
+

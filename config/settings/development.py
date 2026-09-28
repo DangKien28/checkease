@@ -1,7 +1,9 @@
-from pathlib import Path
+﻿from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / '.env')
 from .base import *
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -23,6 +25,8 @@ INSTALLED_APPS = [
     'apps.projects',
     'apps.artifacts',
     'apps.gate_engine',
+    'apps.code_analysis',
+    'apps.testing_analysis',
 ]
 
 MIDDLEWARE = [
@@ -63,3 +67,5 @@ DATABASES = {
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+

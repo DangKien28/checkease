@@ -12,5 +12,6 @@ urlpatterns = [
     path('projects/<uuid:project_id>/delete/', views.delete_project_view, name='delete_project'),
     path('projects/<uuid:project_id>/edit/', views.project_edit_view, name='project_edit'),
     path('api/projects/<uuid:project_id>/update/', views.update_project_api, name='update_project_api'),
+    path('api/projects/<uuid:project_id>/new-version/', views.upload_new_version, name='upload_new_version'),
     path('projects/<uuid:project_id>/settings/', views.update_project_settings, name='update_project_settings'),
 ]

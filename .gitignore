@@ -1,4 +1,4 @@
-﻿# Python / Django
+# Python / Django
 __pycache__/
 *.py[cod]
 *.class
@@ -58,3 +58,7 @@ checkease-ui/
 #Dev-Ops
 docker-compose.yml
 Dockerfile
+tmp/
+NHÓM_8-CS466AIS-ĐẶNG_TRUNG_KIÊN.docx
+test/
+tests/

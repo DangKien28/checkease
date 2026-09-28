@@ -55,7 +55,7 @@
                 {% include "components/badges/verdict.html" with verdict=p.verdict %}
                 {% if p.final_score != None %}<strong class="mono">{{ p.final_score|floatformat:1 }}</strong>{% endif %}
               </div>
-              <div style="font-size:12px;color:var(--text-3)">{{ p.time_ago }} &middot; v{{ p.latest_seq }}</div>
+              <div style="font-size:12px;color:var(--text-3)">{{ p.time_ago|timesince }} trước &middot; v{{ p.latest_seq }}</div>
             {% else %}
               <span class="u-muted">Chưa chạy</span>
             {% endif %}

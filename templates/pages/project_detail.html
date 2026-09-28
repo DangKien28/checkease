@@ -3,6 +3,7 @@
 {% block title %}Chi tiết dự án - Checkease{% endblock %}
 
 {% block content %}
+<div x-data="projectDetailApp('{{ project.id }}')">
 <a class="ce-backlink" href="/projects/" hx-get="/projects/" hx-push-url="true">
   <svg class="ce-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
   <span>Danh sách dự án</span>
@@ -18,7 +19,11 @@
     <div class="ce-pagehead__desc">{{ project.description|default:"Chưa có mô tả" }}</div>
   </div>
   <div class="ce-pagehead__actions">
-    <button class="ce-btn ce-btn--secondary">
+    <button class="ce-btn ce-btn--primary" id="btnMockupPdf" onclick="exportRealPdf(this)" data-project-id="{{ project.id }}" data-v-num="{{ v_num }}" data-w-test="{{ w_testing }}" data-w-code="{{ w_code }}" data-pass-th="{{ pass_th }}" data-warn-th="{{ warn_th }}">
+      <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      Xuất báo cáo PDF
+    </button>
+    <button class="ce-btn ce-btn--secondary" @click="showUploadModal = true">
       <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
       Tải lên phiên bản mới
     </button>
@@ -29,114 +34,339 @@
   </div>
 </div>
 
-
-<!-- Trạng thái Đang phân tích (RUNNING) -->
-<section class="ce-card u-mb-4" style="display: none;"> <!-- Ẩn đi mặc định cho mục đích mockup tĩnh -->
-  <div class="ce-card__body">
-    <div class="u-flex u-items-center u-gap-3 u-mb-4">
-      <span class="ce-spinner" style="color:var(--verdict-run-solid)"></span>
-      <div>
-        <div style="font-weight:800;font-size:15px">Đang phân tích phiên bản v1…</div>
-        <div class="u-muted" style="font-size:12.5px">Hai nhánh chạy song song (queue_sast + queue_llm); UI tự cập nhật mỗi 2 giây.</div>
+<div id="real-time-results" {% if is_processing %}hx-get="" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+  {% if is_processing %}
+  <section class="ce-card u-mb-4">
+    <div class="ce-card__body">
+      <div class="u-flex u-items-center u-gap-3 u-mb-4">
+        <span class="ce-spinner" style="color:var(--verdict-run-solid)"></span>
+        <div>
+          <div style="font-weight:800;font-size:15px">Đang phân tích phiên bản v{{ v_num }}...</div>
+          <div class="u-muted" style="font-size:12.5px">Hệ thống đang xử lý, tự động cập nhật kết quả.</div>
+        </div>
       </div>
-    </div>
-    
-    <!-- Steps/Progress Component -->
-    <div data-progress>
       <div class="ce-steps">
-        <div class="step is-active"><div class="dot"></div>Tải mã nguồn</div>
-        <div class="step"><div class="dot"></div>Phân tích AST</div>
-        <div class="step"><div class="dot"></div>Quét Test Cases</div>
-        <div class="step"><div class="dot"></div>Đánh giá AI</div>
-        <div class="step"><div class="dot"></div>Tổng hợp</div>
+        <div class="step {% if latest_code.status == 'COMPLETED' %}is-active{% endif %}"><div class="dot"></div>Source Code ({{ latest_code.status|default:"PENDING" }})</div>
+        <div class="step {% if latest_test.status == 'COMPLETED' %}is-active{% endif %}"><div class="dot"></div>Testing ({{ latest_test.status|default:"PENDING" }})</div>
+        <div class="step"><div class="dot"></div>Gate Engine ({{ latest_run.status|default:"PENDING" }})</div>
       </div>
       <div class="ce-progress ce-progress--running u-mt-4">
-        <div class="ce-progress__bar" style="width: 45%;"></div>
+        <div class="ce-progress__bar" style="width: 50%;"></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+  {% else %}
+  <section class="ce-card ce-verdict-header u-mb-4" 
+      {% if latest_result.decision == 'PASS' %}style="color:var(--verdict-pass-solid)"
+      {% elif latest_result.decision == 'WARNING' %}style="color:var(--verdict-warn-solid)"
+      {% else %}style="color:var(--verdict-fail-solid)"{% endif %}>
+    <div class="ce-card__body" style="padding:24px">
+      <div class="grid">
+        {% if latest_result.decision == 'PASS' %}
+          <span class="ce-badge ce-badge--pass ce-badge--verdict-lg"><span class="dot"></span>PASS</span>
+        {% elif latest_result.decision == 'WARNING' %}
+          <span class="ce-badge ce-badge--warn ce-badge--verdict-lg"><span class="dot"></span>WARNING</span>
+        {% else %}
+          <span class="ce-badge ce-badge--fail ce-badge--verdict-lg"><span class="dot"></span>FAIL</span>
+        {% endif %}
+        <div>
+          <div class="score-big">{{ latest_result.final_score|default:"0.0" }} <small>/100</small></div>
+          <div class="u-muted" style="font-size:12.5px;color:var(--text-3)">Final Score &middot; 
+            {% if latest_result.decision == 'PASS' %}đạt chuẩn phát hành
+            {% elif latest_result.decision == 'WARNING' %}cần rà soát thêm
+            {% else %}không đạt tiêu chuẩn phát hành{% endif %}
+          </div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:22px;flex-wrap:wrap;align-items:center">
+          <div><div class="u-muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Testing</div><div class="mono" style="font-weight:800;font-size:19px">{{ latest_result.testing_score|default:"0.0" }}</div></div>
+          <div><div class="u-muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Source Code</div><div class="mono" style="font-weight:800;font-size:19px">{{ latest_result.source_code_score|default:"0.0" }}</div></div>
+        </div>
+      </div>
+      <div class="u-flex u-gap-2 u-mt-4" style="flex-wrap:wrap">
+        <span class="ce-chip">Tier <b>{{ tier_val }}</b></span>
+        <span class="ce-chip">W1 <b>{{ w_testing }}</b> &middot; W2 <b>{{ w_code }}</b></span>
+        <span class="ce-chip">Ngưỡng: PASS &ge; <b>{{ pass_th }}</b> &middot; WARNING &ge; <b>{{ warn_th }}</b></span>
+        <span class="ce-chip">Hard Gate Critical: <b>Bật</b></span>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
-<section class="ce-card ce-verdict-header u-mb-4" style="color:var(--verdict-pass-solid)">
-  <div class="ce-card__body" style="padding:24px">
-    <div class="grid">
-      <span class="ce-badge ce-badge--pass ce-badge--verdict-lg"><span class="dot"></span>PASS</span>
-      <div>
-        <div class="score-big">85.0 <small>/100</small></div>
-        <div class="u-muted" style="font-size:12.5px;color:var(--text-3)">Final Score &middot; phần mềm đạt ngưỡng sẵn sàng phát hành</div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:22px;flex-wrap:wrap;align-items:center">
-        <div><div class="u-muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Testing</div><div class="mono" style="font-weight:800;font-size:19px">80.0</div></div>
-        <div><div class="u-muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Source Code</div><div class="mono" style="font-weight:800;font-size:19px">90.0</div></div>
-        <div><div class="u-muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">So với trước</div><span class="ce-delta up"><svg class="ce-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span>+2.0</span></span></div>
-      </div>
-    </div>
-    <div class="u-flex u-gap-2 u-mt-4" style="flex-wrap:wrap">
-      <span class="ce-chip">Tier <b>{{ tier_val }}</b></span>
-      <span class="ce-chip">W1 <b>{{ w_testing }}</b> &middot; W2 <b>{{ w_code }}</b></span>
-      <span class="ce-chip">Ngưỡng: PASS &ge; <b>{{ pass_th }}</b> &middot; WARNING &ge; <b>{{ warn_th }}</b></span>
-      <span class="ce-chip">Hard Gate Critical: <b>Bật</b></span>
-    </div>
-  </div>
-</section>
-
-<!-- Thông tin dự án -->
-<section class="ce-card u-mb-4">
-  <div class="ce-card__body">
-    <div class="u-flex u-items-center u-gap-2 u-mb-4"><b style="font-size:14px">Thông tin & cấu hình dự án</b></div>
-    <div class="ce-info-list">
-      <div class="item"><div class="k">Loại tier</div><div class="v"><span class="ce-badge" style="background:var(--verdict-warn-bg);color:var(--verdict-warn-fg)">Tier {{ tier_val }}</span></div></div>
-      <div class="item"><div class="k">Trọng số (Testing / Code)</div><div class="v mono">{{ w_testing }} / {{ w_code }}</div></div>
-      <div class="item"><div class="k">Sàn nhánh (branch_floor)</div><div class="v mono">40</div></div>
-      <div class="item"><div class="k">Sàn FAIL Testing (F2)</div><div class="v mono">30</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- Hai cột kết quả -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:16px">
-  <section class="ce-card" style="height:100%">
-    <header class="ce-card__header">
-      <div>
-        <div class="ce-card__title">Kết quả phân tích Source Code</div>
-        <div class="ce-card__subtitle">Semgrep (pinned ruleset) + Secret scan</div>
-      </div>
-    </header>
+  <section class="ce-card u-mb-4">
     <div class="ce-card__body">
-      <div class="u-flex u-items-center u-gap-4 u-mb-4">
-        <div class="ce-score-ring" style="width:104px;height:104px;--p:90;--c:var(--verdict-pass-solid)">
-          <svg viewBox="0 0 36 36"><path class="bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"/><path class="fill" stroke-dasharray="90, 100" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"/></svg>
-          <div class="inner"><div class="val mono">90</div></div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:10px">
-          <div><div class="u-flex u-justify-between" style="font-size:12.5px;font-weight:600"><span>Security <span class="u-muted mono">(w=0.5)</span></span><span class="mono">100.0</span></div><div class="ce-scorebar" style="margin-top:4px"><div class="bar"><i style="width:100%;background:var(--verdict-pass-solid)"></i></div></div></div>
-          <div><div class="u-flex u-justify-between" style="font-size:12.5px;font-weight:600"><span>Reliability <span class="u-muted mono">(w=0.3)</span></span><span class="mono">80.0</span></div><div class="ce-scorebar" style="margin-top:4px"><div class="bar"><i style="width:80%;background:var(--verdict-pass-solid)"></i></div></div></div>
-        </div>
-      </div>
-      <div class="ce-banner ce-banner--brand u-mt-4" style="font-size:12.5px">
-        <div><b>AI Explanation (tham khảo)</b> Mã nguồn đáp ứng tốt các tiêu chuẩn bảo mật.</div>
+      <div class="u-flex u-items-center u-gap-2 u-mb-4"><b style="font-size:14px">Thông tin & cấu hình dự án</b></div>
+      <div class="ce-info-list">
+        <div class="item"><div class="k">Loại tier</div><div class="v"><span class="ce-badge" style="background:var(--verdict-warn-bg);color:var(--verdict-warn-fg)">Tier {{ tier_val }}</span></div></div>
+        <div class="item"><div class="k">Trọng số (Testing / Code)</div><div class="v mono">{{ w_testing }} / {{ w_code }}</div></div>
       </div>
     </div>
   </section>
 
-  <section class="ce-card" style="height:100%">
-    <header class="ce-card__header">
-      <div>
-        <div class="ce-card__title">Kết quả phân tích Tài liệu Test</div>
-        <div class="ce-card__subtitle">Parser PDF/DOCX/XLSX/JUnit XML</div>
-      </div>
-    </header>
-    <div class="ce-card__body">
-      <div class="u-flex u-items-center u-gap-4 u-mb-4">
-        <div class="ce-score-ring" style="width:104px;height:104px;--p:80;--c:var(--verdict-pass-solid)">
-          <svg viewBox="0 0 36 36"><path class="bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"/><path class="fill" stroke-dasharray="80, 100" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"/></svg>
-          <div class="inner"><div class="val mono">80</div></div>
+  <div class="grid u-gap-4" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <!-- Nhánh SAST -->
+    <section class="ce-card">
+      <div class="ce-card__body">
+        <div class="u-flex u-items-center u-justify-between u-mb-4">
+          <div class="u-flex u-items-center u-gap-2">
+            <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <b style="font-size:14px">Source Code Security</b>
+          </div>
+          {% if latest_code %}
+            <span class="ce-badge ce-badge--{{ latest_code.status|lower }}">{{ latest_code.status }}</span>
+          {% else %}
+            <span class="ce-badge ce-badge--run">PENDING</span>
+          {% endif %}
         </div>
+        
+        {% if latest_code.status == 'COMPLETED' %}
+        <div class="score-big u-mb-3" style="font-size:32px">{{ latest_code.code_score|default:"0.0" }} <small>/100</small></div>
+        <p class="u-muted u-mb-3" style="font-size:13px;line-height:1.5">
+          {% if latest_code.result_json.ai_explanation %}
+            {{ latest_code.result_json.ai_explanation|truncatewords:20 }}
+          {% else %}
+            Phân tích Semantic AI và Rule-based SAST đã hoàn tất.
+          {% endif %}
+        </p>
+        {% elif latest_code.status == 'PROCESSING' %}
+        <div class="u-flex u-items-center u-gap-2 u-mb-3" style="color:var(--verdict-run-solid)">
+          <span class="ce-spinner"></span>
+          <span style="font-size:13px;font-weight:600">Đang quét SAST...</span>
+        </div>
+        {% else %}
+        <div class="u-muted u-mb-3" style="font-size:13px">Chưa có kết quả hoặc đang chờ xử lý.</div>
+        {% endif %}
       </div>
-      <div class="ce-banner ce-banner--brand u-mt-4" style="font-size:12.5px">
-        <div><b>AI Summary (tham khảo)</b> Độ bao phủ test case khá tốt, cần bổ sung thêm các case biên.</div>
+    </section>
+    
+    <!-- Nhánh Testing -->
+    <section class="ce-card">
+      <div class="ce-card__body">
+        <div class="u-flex u-items-center u-justify-between u-mb-4">
+          <div class="u-flex u-items-center u-gap-2">
+            <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <b style="font-size:14px">Testing Documents</b>
+          </div>
+          {% if latest_test %}
+            <span class="ce-badge ce-badge--{{ latest_test.status|lower }}">{{ latest_test.status }}</span>
+          {% else %}
+            <span class="ce-badge ce-badge--run">PENDING</span>
+          {% endif %}
+        </div>
+        
+        {% if latest_test.status == 'COMPLETED' %}
+        <div class="score-big u-mb-3" style="font-size:32px">{{ latest_test.testing_score|default:"0.0" }} <small>/100</small></div>
+        <p class="u-muted u-mb-3" style="font-size:13px;line-height:1.5">
+          {% if latest_test.result_json.ai_summary %}
+            {{ latest_test.result_json.ai_summary|truncatewords:20 }}
+          {% else %}
+            Phân tích tài liệu kiểm thử đã hoàn tất. Pass rate: {{ latest_test.pass_rate|default:"0" }}%.
+          {% endif %}
+        </p>
+        {% elif latest_test.status == 'PROCESSING' %}
+        <div class="u-flex u-items-center u-gap-2 u-mb-3" style="color:var(--verdict-run-solid)">
+          <span class="ce-spinner"></span>
+          <span style="font-size:13px;font-weight:600">Đang quét Semantic AI...</span>
+        </div>
+        {% else %}
+        <div class="u-muted u-mb-3" style="font-size:13px">Chưa có kết quả hoặc đang chờ xử lý.</div>
+        {% endif %}
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </div>
+
+<!-- TABLES SECTION -->
+<div class="ce-card" style="margin-top: 32px;" x-data="{ activeTab: 'code' }">
+  <div class="ce-card__header" style="display:flex;gap:16px;border-bottom:1px solid #e2e8f0;padding-bottom:0;">
+    <div style="font-size:16px;font-weight:600;padding-bottom:12px;">Chi tiết Bằng chứng Vi phạm</div>
+    <div style="display:flex;gap:16px;margin-left:auto;">
+      <button @click="activeTab = 'code'" :style="activeTab === 'code' ? 'border-bottom:2px solid #047857;color:#047857;font-weight:600;padding-bottom:12px;' : 'padding-bottom:12px;color:#64748b;'">Lỗi Source Code</button>
+      <button @click="activeTab = 'test'" :style="activeTab === 'test' ? 'border-bottom:2px solid #047857;color:#047857;font-weight:600;padding-bottom:12px;' : 'padding-bottom:12px;color:#64748b;'">Lỗi Testing</button>
+    </div>
+  </div>
+  <div class="ce-card__body">
+    <!-- SOURCE CODE TAB -->
+    <div x-show="activeTab === 'code'" style="overflow-x:auto;">
+      {% if latest_code and latest_code.result_json.findings %}
+      <table style="width:100%;text-align:left;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <th style="padding:12px;font-size:13px;color:#64748b;">File / Dòng</th>
+            <th style="padding:12px;font-size:13px;color:#64748b;">Mức độ</th>
+            <th style="padding:12px;font-size:13px;color:#64748b;">Mô tả</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in latest_code.result_json.findings %}
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:12px;font-size:13px;font-family:monospace;white-space:nowrap;">{{ f.file }}:{{ f.line }}</td>
+            <td style="padding:12px;font-size:13px;">
+              <span style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;
+              {% if f.final_severity == 'Critical' %}background:#fee2e2;color:#991b1b;
+              {% elif f.final_severity == 'Major' %}background:#ffedd5;color:#9a3412;
+              {% else %}background:#fef9c3;color:#854d0e;{% endif %}">{{ f.final_severity }}</span>
+            </td>
+            <td style="padding:12px;font-size:13px;">{{ f.message }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:#64748b;font-size:14px;padding:20px 0;">Không có lỗi Source Code nào được ghi nhận.</p>
+      {% endif %}
+    </div>
+    
+    <!-- TESTING TAB -->
+    <div x-show="activeTab === 'test'" style="overflow-x:auto;">
+      {% if latest_test and latest_test.result_json.defects %}
+      <table style="width:100%;text-align:left;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <th style="padding:12px;font-size:13px;color:#64748b;">Test Case</th>
+            <th style="padding:12px;font-size:13px;color:#64748b;">Mức độ</th>
+            <th style="padding:12px;font-size:13px;color:#64748b;">Thực tế / Lý do AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in latest_test.result_json.defects %}
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:12px;font-size:13px;font-family:monospace;white-space:nowrap;">{{ d.test_case_id|default:"N/A" }}</td>
+            <td style="padding:12px;font-size:13px;">
+              <span style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;
+              {% if d.severity == 'Critical' %}background:#fee2e2;color:#991b1b;
+              {% elif d.severity == 'Major' %}background:#ffedd5;color:#9a3412;
+              {% else %}background:#fef9c3;color:#854d0e;{% endif %}">{{ d.severity }}</span>
+            </td>
+            <td style="padding:12px;font-size:13px;">
+              <strong>Thực tế:</strong> {{ d.actual_result }}<br/>
+              <span style="color:#047857;"><strong>AI nói:</strong> {{ d.reason }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:#64748b;font-size:14px;padding:20px 0;">Không có lỗi Testing nào được ghi nhận.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+  <!-- UPLOAD MODAL -->
+  <div class="ce-modal-backdrop" x-show="showUploadModal" x-cloak style="display:none;" @keydown.escape.window="showUploadModal = false">
+    <div class="ce-modal" @click.outside="showUploadModal = false">
+      <div class="ce-modal__header">
+        <div class="ce-modal__title">Tải lên phiên bản mới</div>
+        <button type="button" class="ce-modal__close" @click="showUploadModal = false" aria-label="Đóng">
+          <svg class="ce-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="ce-modal__body">
+        <div class="u-mb-3">
+          <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13.5px;">Mã nguồn (ZIP) <span style="color:var(--verdict-fail-solid)">*</span></label>
+          <input type="file" id="newVerSourceFile" accept=".zip" class="ce-input" style="width:100%; padding:8px;" />
+          <span style="display:block; font-size:12px; color:var(--text-3); margin-top:4px;">Tệp nén .zip chứa toàn bộ mã nguồn của phiên bản mới.</span>
+        </div>
+        <div class="u-mb-2">
+          <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13.5px;">Tài liệu Test (Tùy chọn)</label>
+          <input type="file" id="newVerTestFiles" multiple accept=".xlsx,.docx,.pdf,.xml" class="ce-input" style="width:100%; padding:8px;" />
+          <span style="display:block; font-size:12px; color:var(--text-3); margin-top:4px;">Hỗ trợ các file định dạng .xlsx, .docx, .pdf hoặc JUnit .xml.</span>
+        </div>
+      </div>
+      <div class="ce-modal__footer">
+        <button type="button" class="ce-btn ce-btn--secondary" @click="showUploadModal = false" :disabled="isUploading">Hủy</button>
+        <button type="button" class="ce-btn ce-btn--primary" @click="uploadFiles()" :disabled="isUploading">
+          <span x-show="isUploading" class="ce-spinner" style="margin-right:6px;"></span>
+          <span x-text="btnText">Tải lên</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  window.projectDetailApp = function(projectId) {
+    return {
+      showUploadModal: false,
+      isUploading: false,
+      btnText: 'Tải lên',
+      
+      async uploadToMinIO(file, projectVersionId, artifactType) {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const sha256 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        const resUrl = await fetch('/api/artifacts/upload-url/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ original_filename: file.name })
+        });
+        if (!resUrl.ok) throw new Error('Không lấy được URL upload từ Backend');
+        const { url, storage_key } = await resUrl.json();
+        
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type || 'application/octet-stream' }
+        });
+        if (!putRes.ok) throw new Error('Lỗi khi tải file lên MinIO. Vui lòng kiểm tra kết nối.');
+        
+        await fetch('/api/artifacts/confirm-upload/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            storage_key: storage_key,
+            original_filename: file.name,
+            size_bytes: file.size,
+            sha256: sha256,
+            project_version_id: projectVersionId,
+            artifact_type: artifactType,
+            content_type: file.type
+          })
+        });
+      },
+      
+      async uploadFiles() {
+        const sourceInput = document.getElementById('newVerSourceFile');
+        const testInput = document.getElementById('newVerTestFiles');
+        const sourceFile = sourceInput ? sourceInput.files[0] : null;
+        const testFiles = testInput ? testInput.files : [];
+        
+        if (!sourceFile) {
+          alert('Vui lòng chọn file mã nguồn (ZIP)!');
+          return;
+        }
+        
+        this.isUploading = true;
+        this.btnText = 'Đang khởi tạo...';
+        
+        try {
+          const resCreate = await fetch('/api/projects/' + projectId + '/new-version/', { method: 'POST' });
+          if (!resCreate.ok) throw new Error('Lỗi tạo phiên bản mới từ Backend');
+          const { project_version_id } = await resCreate.json();
+          
+          this.btnText = 'Đang tải mã nguồn...';
+          await this.uploadToMinIO(sourceFile, project_version_id, 'SOURCE_CODE');
+          
+          if (testFiles && testFiles.length > 0) {
+            this.btnText = 'Đang tải tài liệu test...';
+            for (let i = 0; i < testFiles.length; i++) {
+              await this.uploadToMinIO(testFiles[i], project_version_id, 'TEST_DOCUMENT');
+            }
+          }
+          
+          alert('Tải lên phiên bản mới thành công! Hệ thống đang tiến hành phân tích.');
+          window.location.reload();
+        } catch (e) {
+          alert('Lỗi tải lên: ' + e.message);
+        } finally {
+          this.isUploading = false;
+          this.btnText = 'Tải lên';
+          this.showUploadModal = false;
+        }
+      }
+    };
+  };
+</script>
 {% endblock %}

@@ -49,8 +49,8 @@
       </div>
       <span class="ce-chip" data-th-chip>Ngưỡng áp dụng: <b>Tier 2</b> &middot; PASS &ge; 80 &middot; WARNING &ge; 60</span>
     </div>
-    <div id="overview-chart" style="height: 272px;">
-      <!-- Chart.js canvas will be injected here via app.js -->
+    <div id="overview-chart" style="height: 272px;" data-chart='{{ chart_data_json|safe }}'>
+      <canvas id="overviewCanvas"></canvas>
     </div>
   </div>
 </section>

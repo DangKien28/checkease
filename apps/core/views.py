@@ -10,7 +10,17 @@ def landing_view(request):
     return render(request, 'pages/landing.html')
 
 def settings_view(request):
-    return render(request, 'pages/settings.html')
+    keys = ['api_key_openai', 'api_key_gemini', 'api_key_claude', 'application_tier_config', 'default_weights']
+    settings_dict = {}
+    for setting in SystemSetting.objects.filter(key__in=keys):
+        settings_dict[setting.key] = setting.value
+        
+    context = {
+        'api_key_openai': settings_dict.get('api_key_openai', ''),
+        'api_key_gemini': settings_dict.get('api_key_gemini', ''),
+        'api_key_claude': settings_dict.get('api_key_claude', ''),
+    }
+    return render(request, 'pages/settings.html', context)
 
 @csrf_exempt
 @require_POST

@@ -28,26 +28,43 @@
 
 <!-- TIER 1: LLM API -->
 <div x-show="activeTab === 'llm'">
-  <section class="ce-card">
+  <section class="ce-card" x-data="{
+      provider: 'gemini',
+      keys: {
+          openai: '{{ api_key_openai }}',
+          gemini: '{{ api_key_gemini }}',
+          claude: '{{ api_key_claude }}'
+      },
+      save() {
+          fetch('/api/settings/update/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+              body: JSON.stringify({ llm_keys: this.keys })
+          }).then(res => res.json()).then(data => {
+              if (data.error) alert('Lỗi: ' + data.error);
+              else alert('Lưu thành công!');
+          }).catch(err => alert('Error: ' + err));
+      }
+  }">
     <div class="ce-card__body">
       <div class="u-flex u-gap-4" style="flex-wrap:wrap">
         <div class="ce-field" style="flex:1;min-width:220px">
           <label class="ce-label">Nhà cung cấp</label>
-          <select class="ce-select" name="provider">
+          <select class="ce-select" x-model="provider">
             <option value="openai">OpenAI (GPT-4o)</option>
-            <option value="gemini" selected>Google Gemini 1.5 Pro</option>
-            <option value="anthropic">Anthropic Claude Sonnet</option>
+            <option value="gemini">Google Gemini 2.0 Flash</option>
+            <option value="claude">Anthropic Claude Sonnet</option>
           </select>
         </div>
         <div class="ce-field" style="flex:1;min-width:220px">
           <label class="ce-label">Model</label>
-          <input type="text" class="ce-input" value="gemini-1.5-pro-latest" />
+          <input type="text" class="ce-input" value="auto-selected" disabled />
         </div>
       </div>
       
       <div class="ce-field u-mt-3">
         <label class="ce-label">API Key</label>
-        <input type="password" class="ce-input" value="sk-xxxxxxxxxxxxxxxxxxxxxxxx" placeholder="sk-…" />
+        <div style="position: relative; display: flex; align-items: center;" x-data="{ showKey: false }"><input :type="showKey ? 'text' : 'password'" class="ce-input" x-model="keys[provider]" placeholder="Nhập API Key..." style="padding-right: 40px;" /><button type="button" @click="showKey = !showKey" style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-3);"><svg x-show="!showKey" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><svg x-show="showKey" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></button></div>
       </div>
       
       <div class="ce-field u-mt-3">
@@ -61,16 +78,8 @@
         </label>
       </div>
       
-      <div class="u-flex u-gap-2 u-mt-4" style="align-items:center">
-        <button class="ce-btn ce-btn--secondary">
-          <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          <span>Kiểm tra kết nối</span>
-        </button>
-        <span class="u-muted" style="font-size:12.5px">Kiểm tra bằng một lời gọi thử (không tính phí mô hình lớn).</span>
-      </div>
-      
       <div class="u-flex u-justify-end u-mt-4">
-        <button class="ce-btn ce-btn--primary">
+        <button class="ce-btn ce-btn--primary" @click="save()">
           <svg class="ce-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           <span>Lưu cài đặt LLM</span>
         </button>

@@ -3,6 +3,7 @@
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
+[x-cloak] { display: none !important; }
 
 html, body {
   margin: 0;
